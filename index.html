@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- 문자 인코딩: 한글이 깨지지 않도록 UTF-8로 설정합니다 -->
+  <meta charset="UTF-8" />
+  <!-- 모바일 반응형: 화면 크기에 맞게 표시되도록 설정합니다 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>내 이야기를 들어줘!</title>
+
+  <!-- Google Fonts: 부드럽고 읽기 편한 한국어 폰트를 불러옵니다 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- 스타일시트 연결 -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ================================================================
+       위기상담 배너
+       항상 화면 최상단에 고정됩니다. 위기 상황 시 즉시 도움받을 수 있습니다.
+  ================================================================ -->
+  <div class="crisis-banner" role="alert" aria-label="위기상담 안내">
+    <span class="crisis-icon">🆘</span>
+    <span class="crisis-text">
+      위기상담 전화:
+      <a href="tel:1393" class="crisis-link">자살예방상담전화 1393</a>
+      &nbsp;|&nbsp;
+      <a href="tel:1577-0199" class="crisis-link">정신건강위기상담 1577-0199</a>
+    </span>
+  </div>
+
+
+  <!-- ================================================================
+       화면 1: API 키 입력 화면 (#api-key-screen)
+       처음 앱을 열면 이 화면이 표시됩니다.
+       Gemini API 키를 입력하면 채팅 화면으로 이동합니다.
+  ================================================================ -->
+  <div id="api-key-screen" class="screen active">
+    <div class="api-key-container">
+
+      <!-- 앱 로고 및 제목 -->
+      <div class="app-logo-area">
+        <div class="logo-icon" aria-hidden="true">🌸</div>
+        <h1 class="app-title">내 이야기를 들어줘!</h1>
+        <p class="app-subtitle">24시간 당신의 이야기를 들어드립니다</p>
+      </div>
+
+      <!-- 상담사 소개 카드 -->
+      <div class="counselor-intro-card">
+        <div class="counselor-avatar-large" aria-hidden="true">🧸</div>
+        <div class="counselor-intro-text">
+          <strong>소담이</strong>가 기다리고 있어요
+          <p>언제든지 편하게 이야기해 주세요</p>
+        </div>
+      </div>
+
+      <!-- API 키 입력 폼 -->
+      <div class="api-key-form">
+        <label for="api-key-input" class="form-label">
+          Gemini API 키를 입력해 주세요
+        </label>
+
+        <!-- 비밀번호 입력창 + 눈 아이콘 버튼 -->
+        <div class="input-password-wrapper">
+          <input
+            type="password"
+            id="api-key-input"
+            class="api-key-input"
+            placeholder="API 키를 입력하세요 (AIza...)"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <!-- 눈 아이콘 버튼: 클릭하면 API 키를 보거나 숨깁니다 -->
+          <button
+            type="button"
+            class="toggle-password-btn"
+            id="toggle-password"
+            aria-label="API 키 표시/숨기기"
+          >
+            <!-- 눈 열린 아이콘 (현재 숨김 상태일 때 표시) -->
+            <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <!-- 눈 닫힌 아이콘 (현재 보이는 상태일 때 표시) -->
+            <svg class="eye-icon eye-closed hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 안내 문구 -->
+        <p class="form-hint">
+          API 키는 브라우저에만 저장되며, 외부 서버로 전송되지 않습니다
+        </p>
+
+        <!-- 오류 메시지 (기본 숨김, JS에서 필요 시 표시) -->
+        <p id="api-key-error" class="form-error hidden" role="alert"></p>
+
+        <!-- 상담 시작 버튼 -->
+        <button type="button" id="start-chat-btn" class="btn btn-primary btn-large">
+          <span class="btn-icon" aria-hidden="true">💬</span>
+          상담 시작하기
+        </button>
+
+        <!-- API 키 발급 안내 링크 -->
+        <div class="api-key-guide">
+          <p class="guide-text">
+            API 키가 없으신가요?
+            <a
+              href="https://aistudio.google.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="guide-link"
+            >
+              Google AI Studio에서 무료로 발급받기 →
+            </a>
+          </p>
+        </div>
+      </div>
+
+      <!-- 개인정보 보호 안내 -->
+      <div class="privacy-notice">
+        <span class="privacy-icon" aria-hidden="true">🔒</span>
+        <p class="privacy-text">
+          입력하신 API 키는 <strong>브라우저 로컬 스토리지에만 저장</strong>되며,
+          개발자나 외부 서버로 전송되지 않습니다.
+          이 서비스는 Gemini API를 통해 직접 통신합니다.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       화면 2: 채팅 화면 (#chat-screen)
+       API 키 입력 후 이 화면으로 전환됩니다.
+  ================================================================ -->
+  <div id="chat-screen" class="screen hidden">
+
+    <!-- 채팅 헤더: 상담사 정보와 설정 버튼 -->
+    <header class="chat-header" role="banner">
+      <div class="chat-header-inner">
+
+        <!-- 왼쪽: 상담사 정보 -->
+        <div class="counselor-info">
+          <!-- 상담사 아바타 -->
+          <div class="counselor-avatar" aria-hidden="true">🧸</div>
+          <div class="counselor-details">
+            <span class="app-name-small">내 이야기를 들어줘!</span>
+            <h2 class="counselor-name">소담이</h2>
+            <!-- 온라인 상태 (초록 점 + 텍스트) -->
+            <div class="online-status" role="status">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span class="status-text">언제나 함께해요</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 오른쪽: 설정 버튼 -->
+        <button
+          type="button"
+          class="settings-btn"
+          id="open-settings-btn"
+          aria-label="설정 열기"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+
+      </div>
+    </header>
+
+    <!-- 채팅 메시지 영역 (스크롤 가능) -->
+    <main class="chat-main" role="main">
+      <div
+        id="chat-messages"
+        class="chat-messages"
+        role="log"
+        aria-label="대화 내용"
+        aria-live="polite"
+      >
+        <!-- 환영 메시지 영역 (첫 메시지 후 숨겨집니다) -->
+        <div class="welcome-area" id="welcome-area" aria-hidden="true">
+          <div class="welcome-icon">🌸</div>
+          <p class="welcome-text">안전하고 따뜻한 공간에 오신 걸 환영해요</p>
+        </div>
+        <!-- 메시지는 JavaScript(app.js)에서 동적으로 추가됩니다 -->
+      </div>
+    </main>
+
+    <!-- 메시지 입력 영역 (화면 하단 고정) -->
+    <footer class="chat-input-area">
+      <div class="chat-input-inner">
+
+        <!-- 글자 수 카운터 -->
+        <div class="char-counter-wrapper">
+          <span id="char-counter" class="char-counter" aria-live="polite">0 / 500</span>
+        </div>
+
+        <!-- 입력창 + 전송 버튼 -->
+        <div class="input-row">
+          <!-- 텍스트 입력창 (Enter: 전송, Shift+Enter: 줄바꿈) -->
+          <textarea
+            id="message-input"
+            class="message-input"
+            placeholder="오늘 어떤 하루를 보내셨나요? 편하게 이야기해 주세요..."
+            rows="1"
+            maxlength="500"
+            aria-label="메시지 입력"
+          ></textarea>
+
+          <!-- 전송 버튼 (텍스트 입력 시 활성화) -->
+          <button
+            type="button"
+            id="send-btn"
+            class="send-btn"
+            aria-label="메시지 전송"
+            disabled
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 키보드 단축키 안내 -->
+        <p class="input-hint">Enter로 전송 &nbsp;|&nbsp; Shift+Enter로 줄바꿈</p>
+
+      </div>
+    </footer>
+
+  </div>
+
+
+  <!-- ================================================================
+       설정 모달
+       헤더의 설정 버튼을 클릭하면 열립니다.
+  ================================================================ -->
+
+  <!-- 모달 배경 (클릭하면 모달이 닫힙니다) -->
+  <div id="modal-overlay" class="modal-overlay hidden" aria-hidden="true"></div>
+
+  <!-- 설정 모달 본체 -->
+  <div
+    id="settings-modal"
+    class="modal hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="settings-title"
+  >
+    <!-- 모달 헤더 -->
+    <div class="modal-header">
+      <h3 id="settings-title" class="modal-title">설정</h3>
+      <button
+        type="button"
+        class="modal-close-btn"
+        id="close-settings-btn"
+        aria-label="설정 닫기"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 모달 내용 -->
+    <div class="modal-body">
+
+      <!-- 섹션 1: API 키 변경 -->
+      <section class="modal-section">
+        <h4 class="modal-section-title">🔑 API 키 변경</h4>
+        <div class="input-password-wrapper">
+          <input
+            type="password"
+            id="new-api-key-input"
+            class="api-key-input modal-input"
+            placeholder="새 API 키를 입력하세요"
+            autocomplete="off"
+            aria-label="새 API 키 입력"
+          />
+          <button
+            type="button"
+            class="toggle-password-btn"
+            id="toggle-new-password"
+            aria-label="새 API 키 표시/숨기기"
+          >
+            <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="eye-icon eye-closed hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+              <line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+        <button type="button" id="change-api-key-btn" class="btn btn-secondary btn-small">
+          API 키 변경하기
+        </button>
+      </section>
+
+      <hr class="modal-divider" />
+
+      <!-- 섹션 2: 대화 초기화 -->
+      <section class="modal-section">
+        <h4 class="modal-section-title">🔄 대화 초기화</h4>
+        <p class="modal-section-desc">
+          현재까지의 대화 내용을 모두 지우고 처음부터 새로 시작합니다.
+        </p>
+        <button type="button" id="reset-chat-btn" class="btn btn-danger btn-small">
+          대화 초기화하기
+        </button>
+      </section>
+
+      <hr class="modal-divider" />
+
+      <!-- 섹션 3: 사용 안내 -->
+      <section class="modal-section">
+        <h4 class="modal-section-title">📖 사용 안내</h4>
+        <ul class="guide-list">
+          <li>소담이는 AI 기반 심리 상담 도우미입니다.</li>
+          <li>전문 의료/심리치료를 대체하지 않습니다.</li>
+          <li><strong>Enter</strong>로 메시지를 전송하세요.</li>
+          <li><strong>Shift + Enter</strong>로 줄을 바꿀 수 있어요.</li>
+          <li>API 키는 브라우저에만 저장됩니다.</li>
+          <li>위기 상황이라면 <strong>1393</strong>에 전화하세요.</li>
+        </ul>
+      </section>
+
+    </div>
+  </div>
+
+
+  <!-- 토스트 알림 (화면 상단에 잠깐 나타나는 알림) -->
+  <div id="toast" class="toast hidden" role="alert" aria-live="assertive">
+    <span id="toast-message"></span>
+  </div>
+
+
+  <!-- ================================================================
+       JavaScript 파일 연결
+       순서 중요: api.js를 먼저 로드해야 app.js에서 GeminiAPI 클래스를 사용할 수 있습니다
+  ================================================================ -->
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
